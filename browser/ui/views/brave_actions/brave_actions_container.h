@@ -85,6 +85,8 @@ class BraveActionsContainer : public views::View,
   // views::View:
   void ChildPreferredSizeChanged(views::View* child) override;
 
+  bool ExecuteAction(const std::string& id, bool by_user);
+
  private:
   friend class ::BraveActionsContainerTest;
   // Special positions in the container designators

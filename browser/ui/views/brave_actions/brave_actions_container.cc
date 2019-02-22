@@ -318,3 +318,8 @@ void BraveActionsContainer::ChildPreferredSizeChanged(views::View* child) {
 void BraveActionsContainer::OnBraveRewardsPreferencesChanged() {
   ShowAction(brave_rewards_extension_id, ShouldAddBraveRewardsAction());
 }
+
+bool BraveActionsContainer::ExecuteAction(const std::string& id, bool by_user) {
+  DCHECK(IsContainerAction(id));
+  return actions_.at(id).view_controller_->ExecuteAction(by_user);
+}

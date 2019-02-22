@@ -29,6 +29,10 @@ class BraveLocationBarView : public LocationBarView {
 
   ContentSettingImageView* GetContentSettingsImageViewForTesting(size_t idx);
 
+  BraveActionsContainer* brave_actions_container() {
+    return brave_actions_;
+  }
+
  private:
   friend class ::BraveActionsContainerTest;
   void UpdateBookmarkStarVisibility() override;
