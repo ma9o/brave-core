@@ -405,4 +405,8 @@ void BatLedgerImpl::GetRewardsInternalsInfo(
   std::move(callback).Run(info.ToJson());
 }
 
+void BatLedgerImpl::StartAutoContribute() {
+  ledger_->StartAutoContribute();
+}
+
 }  // namespace bat_ledger
