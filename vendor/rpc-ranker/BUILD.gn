@@ -1,0 +1,42 @@
+# Not tested yet, might not execute properly
+# System paths are those of Ubuntu 
+
+config("external_config") {
+  visibility = [
+    ":*",
+  ]
+  include_dirs = [ "include" ]
+}
+
+config("internal_config") {
+  visibility = []
+  include_dirs = [ "src","/usr/include", "/usr/include/x86_64-linux-gnu/" ]
+}
+
+source_set("rpc-ranker") {
+  public_configs = [ ":external_config" ]
+  configs += [ ":internal_config" ]
+
+  lib_dirs = ["/usr/lib", "/usr/lib/x86_64-linux-gnu/"]
+  libs = ["curl","jsoncpp","jsonrpccpp-common","jsonrpccpp-client"]
+  cflags_cc = ["-fexceptions"]
+  suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
+
+
+  visibility = [
+    ":*",
+    "//brave/vendor/bat-native-ads:ads"
+  ]
+
+  sources = [
+      "src/bat/rpc-ranker/rpc_ranker.cc",
+      "src/bat/rpc-ranker/rpc_ranker.h",
+      "src/bat/rpc-ranker/rpc_stubclient.h"
+  ]
+
+  deps = [
+      "//base"
+  ]
+
+
+}
