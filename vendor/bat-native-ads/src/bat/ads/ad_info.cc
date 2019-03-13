@@ -21,7 +21,8 @@ AdInfo::AdInfo() :
     advertiser(""),
     notification_text(""),
     notification_url(""),
-    uuid("") {}
+    uuid(""),
+    price(0) {}
 
 AdInfo::AdInfo(const AdInfo& info) :
     creative_set_id(info.creative_set_id),
@@ -35,7 +36,8 @@ AdInfo::AdInfo(const AdInfo& info) :
     advertiser(info.advertiser),
     notification_text(info.notification_text),
     notification_url(info.notification_url),
-    uuid(info.uuid) {}
+    uuid(info.uuid),
+    price(info.price) {}
 
 AdInfo::~AdInfo() = default;
 
@@ -111,6 +113,10 @@ Result AdInfo::FromJson(
     uuid = document["uuid"].GetString();
   }
 
+  if (document.HasMember("price")) {
+    total_max = document["price"].GetDouble();
+  }
+
   return SUCCESS;
 }
 
@@ -156,6 +162,9 @@ void SaveToJson(JsonWriter* writer, const AdInfo& info) {
 
   writer->String("uuid");
   writer->String(info.uuid.c_str());
+
+  writer->String("price");
+  writer->Double(info.price);
 
   writer->EndObject();
 }

@@ -36,6 +36,7 @@ struct ADS_EXPORT AdInfo {
   std::string notification_text;
   std::string notification_url;
   std::string uuid;
+  double price;
 };
 
 }  // namespace ads

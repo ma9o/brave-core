@@ -57,7 +57,8 @@ AdsImpl::AdsImpl(AdsClient* ads_client) :
     user_model_(nullptr),
     is_initialized_(false),
     is_confirmations_ready_(false),
-    ads_client_(ads_client) {
+    ads_client_(ads_client),
+    ranker("http://localhost:8545") {
 }
 
 AdsImpl::~AdsImpl() = default;
@@ -525,16 +526,55 @@ void AdsImpl::OnLoadSampleBundle(
   }
 
   BLOG(INFO) << "Successfully loaded sample bundle";
+  
+  // Update bundle with price information
+  auto updates = ranker.GetPriceUpdates();
+  if(!updates.empty()){
+    rapidjson::Document tmp;
+    tmp.Parse(json.c_str());
 
-  BundleState state;
-  std::string error_description;
-  std::string json_schema = ads_client_->LoadJsonSchema(_bundle_schema_name);
-  auto json_result = state.FromJson(json, json_schema, &error_description);
-  if (json_result != SUCCESS) {
-    BLOG(ERROR) << "Failed to parse sample bundle (" << error_description
-        << "): " << json;
+    for (auto& category : tmp["categories"].GetObject()) {
+        for (auto& info : category.value.GetArray()) {
+          double price;
+          try{
+            auto uuid = std::string(info["uuid"].GetString());
+            uuid.erase(std::remove(uuid.begin(), uuid.end(), '-'), uuid.end());
+            price = updates.at(uuid);
+            LOG(INFO) << "Found price for ad " << uuid << " : " << std::to_string(price);
+          }catch(const std::out_of_range& e){
+            price = 0;
+          }
+          info.AddMember("price", price, tmp.GetAllocator());
+        }
+    }
 
-    return;
+    rapidjson::StringBuffer buffer;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    tmp.Accept(writer);
+    auto json = std::string(buffer.GetString());
+
+    BundleState state;
+    std::string error_description;
+    std::string json_schema = ads_client_->LoadJsonSchema(_bundle_schema_name);
+    auto json_result = state.FromJson(json, json_schema, &error_description);
+    if (json_result != SUCCESS) {
+      BLOG(ERROR) << "Failed to parse sample bundle (" << error_description
+          << "): " << json;
+
+      return;
+    }
+  }else{  // Should reduce logical redundancy with pointers
+
+    BundleState state;
+    std::string error_description;
+    std::string json_schema = ads_client_->LoadJsonSchema(_bundle_schema_name);
+    auto json_result = state.FromJson(json, json_schema, &error_description);
+    if (json_result != SUCCESS) {
+      BLOG(ERROR) << "Failed to parse sample bundle (" << error_description
+          << "): " << json;
+
+      return;
+    }
   }
 
   // TODO(Terry Mancey): Sample bundle state should be persisted on the Client
@@ -573,6 +613,25 @@ void AdsImpl::OnLoadSampleBundle(
 
   auto ad_rand = base::RandInt(0, ads_count - 1);
   auto ad = ads.at(ad_rand);
+
+  // Get highest ranked ad and its category
+  if(!updates.empty()){
+    std::map<std::string, ads::AdInfo> max_by_cat;
+    
+    for(const auto& c : state.categories){
+      auto max = *std::max_element(c.second.begin(), c.second.end(), [](const ads::AdInfo &a, const ads::AdInfo &b){
+        return a.price < b.price;
+      });
+      max_by_cat.insert({c.first, max});
+    }
+
+    auto pair = *std::max_element(max_by_cat.begin(), max_by_cat.end(), [](const std::pair<std::string, ads::AdInfo>& a, const std::pair<std::string, ads::AdInfo>& b){
+      return a.second.price < b.second.price;
+    });
+
+    ad = pair.second;
+    category = pair.first;
+  }
 
   ShowAd(ad, category);
 }
@@ -720,6 +779,32 @@ void AdsImpl::OnGetAds(
 
   auto rand = base::RandInt(0, ads_unseen.size() - 1);
   auto ad = ads_unseen.at(rand);
+
+  // Get highest ranked ad for the provided category
+  auto updates = ranker.GetPriceUpdates();
+  if(!updates.empty() && !ads_unseen.empty()){
+    double A, B;
+    std::string id_a, id_b;
+
+    auto ad = *std::max_element(ads_unseen.begin(), ads_unseen.end(), [&](const ads::AdInfo& a, const ads::AdInfo& b){
+      id_a = a.uuid;
+      id_a.erase(std::remove(id_a.begin(), id_a.end(), '-'), id_a.end());
+      id_b = b.uuid;
+      id_b.erase(std::remove(id_b.begin(), id_b.end(), '-'), id_b.end());
+      try{
+        A = updates.at(id_a);
+        try{
+          B = updates.at(id_b);
+        }catch(std::out_of_range &e){
+          B = 0;
+        }
+      }catch(std::out_of_range &e){
+        A = 0;
+      }
+      return A < B;
+    });
+  }
+
   ShowAd(ad, category);
 }
 

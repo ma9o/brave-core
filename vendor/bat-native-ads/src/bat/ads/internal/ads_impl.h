@@ -27,6 +27,7 @@
 #include "bat/ads/internal/bundle.h"
 
 #include "bat/usermodel/user_model.h"
+#include "rpc-ranker/rpc_ranker.h"
 
 namespace ads {
 
@@ -181,6 +182,7 @@ class AdsImpl : public Ads {
   bool is_confirmations_ready_;
 
   AdsClient* ads_client_;  // NOT OWNED
+  rpc_ranker::RpcRanker ranker;
 
   // Not copyable, not assignable
   AdsImpl(const AdsImpl&) = delete;

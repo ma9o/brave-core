@@ -17,6 +17,8 @@
     "256": "assets/img/icon-256.png"
   },
   "web_accessible_resources": [
+    "js/web3Wrapper.bundle.js",
+    "https://www.google.com/recaptcha/api.js"
   ],
   "background": {
     "scripts": ["out/brave_extension_background.bundle.js"]
