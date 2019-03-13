@@ -1,5 +1,5 @@
 # Brave core + curated ads
-Implemented a decentralized curation model for the ads network.
+Implemented a decentralized curation model for the Brave ads network.
 
 Major modifications:
 1. Extension
