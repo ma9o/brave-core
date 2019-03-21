@@ -1,5 +1,6 @@
 # Brave core + curated ads
 Decentralized curation model for the Brave ads network.
+Compilation requires `libjson-rpc-cpp`.
 
 Major modifications:
 1. Extension
@@ -11,5 +12,3 @@ Major modifications:
   * `rpc-ranker/`: new component interfacing with Ethereum on `localhost:8545`.
 
 ![alt text](https://github.com/ma9o/brave-core/blob/master/vendor/rpc-ranker/graph.png "Dataflow")
-
-**Compilation not tested yet!**
